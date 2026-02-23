@@ -1,0 +1,30 @@
+/* crypto-exchange-rate-calculator library styles */
+
+/* Theme-aware scrollbar — matches wts-frontend GlobalStyles */
+/* Dark mode default (light mode overridden by MUI theme at runtime) */
+.cerc-scroller {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 0, 0.15) transparent;
+}
+.cerc-scroller::-webkit-scrollbar {
+  width: 6px;
+  background: transparent;
+}
+.cerc-scroller::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 0, 0.15);
+  border-radius: 3px;
+}
+.cerc-scroller::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 0, 0.3);
+}
+
+/* Light mode scrollbar */
+[data-cerc-theme="light"] .cerc-scroller {
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+[data-cerc-theme="light"] .cerc-scroller::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+}
+[data-cerc-theme="light"] .cerc-scroller::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
