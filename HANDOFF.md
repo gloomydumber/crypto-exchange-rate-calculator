@@ -6,7 +6,7 @@
 
 ## Current Status
 
-**v0.1.0** — Feature-complete, not yet published. All builds pass (`build`, `lint`, `build:lib`).
+**v0.0.3** — Published and integrated into wts-frontend. CI auto-publishes on version bump.
 
 ### What Works
 - Three synchronized input fields (stable/fiatB, fiat, bridge crypto) with live calculation
@@ -15,11 +15,9 @@
 - Settings dialog: pair selector, exchange A/B selectors, stable token, bridge crypto, fallback chain editor
 - `showHeader` prop — `true` for standalone, `false` when used as widget (host provides title bar)
 - `theme` prop — inherits host theme, standalone uses dark green-on-black default
+- `onCopy` callback prop — host app can log copy events (wts-frontend logs to ConsoleWidget)
 - Standalone dev mode (`npm run dev`) and library build (`npm run build:lib`)
-
-### What's Not Done
-- GitHub repo not created yet, package not published
-- wts-frontend integration written but not tested (needs `npm install` after publish)
+- wts-frontend integration live — default layout `w:3, h:9`, `defaultVisible: true`
 
 ## Architecture
 
@@ -30,10 +28,10 @@
 ### Component Hierarchy
 ```
 ExchangeCalc (Provider + ThemeProvider + CssBaseline)
-  └─ Calculator (showHeader prop)
+  └─ Calculator (showHeader, onCopy)
        ├─ Header (title + gear icon) — conditional via showHeader
        ├─ RouteStatusBar (rate display + route indicator + inline gear when no header)
-       ├─ CurrencyInput × 3 (stable/fiatB, fiat, bridge crypto)
+       ├─ CurrencyInput × 3 (stable/fiatB, fiat, bridge crypto) — each has onCopy callback
        └─ SettingsDialog (modal)
             ├─ PairSelector
             ├─ ProviderSelector × 2 (Exchange A, Exchange B)
@@ -41,6 +39,15 @@ ExchangeCalc (Provider + ThemeProvider + CssBaseline)
             ├─ BridgeCryptoSelector
             └─ FallbackChainEditor
 ```
+
+### Props (`ExchangeCalcProps`)
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `height` | `string \| number` | `'100vh'` | Container height |
+| `theme` | `Theme` | Internal dark theme | MUI theme object. Pass host theme for integration. |
+| `showHeader` | `boolean` | `true` | Show title bar + settings icon. Set `false` when host provides its own title. |
+| `onCopy` | `(label: string, value: string) => void` | — | Callback when user copies a value. Used by wts-frontend for logger integration. |
 
 ### Exchange Adapters (`src/exchanges/adapters/`)
 
@@ -112,8 +119,9 @@ Determined by `isFiatToFiat(pair)` — returns `true` when `pair.stable !== 'USD
 ### UI Details
 
 - **Default state** (no input): rate line shows `USDT/KRW — Enter a value to calculate`, route line shows grey dot + `Ready`
-- **RouteStatusBar**: `px: 1` padding, `gap: 0.75` between dot and text
-- **Copy button**: icon transitions to `primary.main` color for 1.5s on copy
+- **RouteStatusBar**: `px: 1` padding, `gap: 0.75` between dot and text; top margin `mt: 1` when `showHeader={false}` (widget mode) to avoid crowding the host title bar
+- **Copy icon**: always `primary.main` (lime) — no transition effect
+- **Settings gear**: `color: 'text.secondary'` matching DEX widget style
 - **Tooltip theme** (standalone dark mode): `bg: rgba(0,0,0,0.92)`, `color: #00ff00`, `border: 1px solid rgba(0,255,0,0.3)`, monospace `0.75rem`
 - **Scrollbar**: `.cerc-scroller` class with `[data-cerc-theme]` light/dark variants, applied to `DialogContent` and `FallbackChainEditor`
 - **Settings dialog**: fixed `height: 600`, `cerc-scroller` class on DialogContent
@@ -123,17 +131,32 @@ Determined by `isFiatToFiat(pair)` — returns `true` when `pair.stable !== 'USD
 Widget file: `src/components/widgets/ExchangeCalcWidget/index.tsx`
 
 ```tsx
+import { useCallback } from 'react'
 import { ExchangeCalc } from '@gloomydumber/crypto-exchange-rate-calculator'
 import '@gloomydumber/crypto-exchange-rate-calculator/style.css'
 import { useTheme } from '@mui/material/styles'
+import { log } from '../../../services/logger'
 
 export default function ExchangeCalcWidget() {
   const theme = useTheme()
-  return <ExchangeCalc height="100%" theme={theme} showHeader={false} />
+
+  const handleCopy = useCallback((label: string, value: string) => {
+    log({
+      level: 'INFO',
+      category: 'SYSTEM',
+      source: 'exchange-calc',
+      message: `Copied ${label}: ${value}`,
+      data: { label, value },
+    })
+  }, [])
+
+  return <ExchangeCalc height="100%" theme={theme} showHeader={false} onCopy={handleCopy} />
 }
 ```
 
-Already registered in widget system (id: `'ExchangeCalc'`). Needs `npm install` after package is published.
+- Registered in widget system: `id: 'ExchangeCalc'`, `label: 'Exchange Calculator'`, `defaultVisible: true`
+- Default layout: `w: 3, h: 9` across all breakpoints
+- Copy events logged to ConsoleWidget via centralized logger (category `SYSTEM`, source `exchange-calc`)
 
 ## Known Issues / Gotchas
 
@@ -142,6 +165,14 @@ Already registered in widget system (id: `'ExchangeCalc'`). Needs `npm install` 
 3. **bitbank lowercase markets**: `buildMarketSymbol` returns `btc_jpy` not `BTC_JPY`.
 4. **DIRECT_STABLE_MARKETS whitelist**: Only Upbit and Bithumb have confirmed direct USDT/KRW markets. Don't add exchanges without verifying.
 5. **CORS**: All current adapters work from browser. If adding new exchanges, verify CORS on public endpoints first. bitflyer was removed for this reason.
+
+## Version History
+
+| Version | Changes |
+|---------|---------|
+| 0.0.3 | Copy icon always lime, settings gear `text.secondary`, added `onCopy` callback prop |
+| 0.0.2 | Top margin on info block in widget mode |
+| 0.1.0 | Initial release — full calculator with 7 adapters, route system, settings |
 
 ## File Map
 
@@ -187,9 +218,6 @@ src/
 
 ## Next Steps
 
-1. Create GitHub repo `gloomydumber/crypto-exchange-rate-calculator`
-2. Push code, verify CI publishes v0.1.0 to GitHub Packages
-3. `npm install @gloomydumber/crypto-exchange-rate-calculator` in wts-frontend
-4. Test widget in grid layout with theme switching (dark/light)
-5. Consider adding more currency pairs (KRW-EUR, JPY-EUR, etc.)
-6. Consider WebSocket-based live price updates (currently REST poll on input change only)
+1. Consider adding more currency pairs (KRW-EUR, JPY-EUR, etc.)
+2. Consider WebSocket-based live price updates (currently REST poll on input change only)
+3. Test widget in grid layout with theme switching (dark/light)
