@@ -10,9 +10,10 @@ import type { FiatCurrency } from '../../types/config'
 
 interface CalculatorProps {
   showHeader?: boolean
+  onCopy?: (label: string, value: string) => void
 }
 
-export function Calculator({ showHeader = true }: CalculatorProps) {
+export function Calculator({ showHeader = true, onCopy }: CalculatorProps) {
   const {
     calcValues,
     effectiveRate,
@@ -59,7 +60,7 @@ export function Calculator({ showHeader = true }: CalculatorProps) {
             Exchange Calculator
           </Typography>
           <Tooltip title="Settings" arrow>
-            <IconButton size="small" onClick={() => setSettingsOpen(true)}>
+            <IconButton size="small" onClick={() => setSettingsOpen(true)} sx={{ color: 'text.secondary' }}>
               <SettingsIcon sx={{ fontSize: '1.1rem' }} />
             </IconButton>
           </Tooltip>
@@ -81,7 +82,7 @@ export function Calculator({ showHeader = true }: CalculatorProps) {
         </Box>
         {!showHeader && (
           <Tooltip title="Settings" arrow>
-            <IconButton size="small" onClick={() => setSettingsOpen(true)} sx={{ flexShrink: 0 }}>
+            <IconButton size="small" onClick={() => setSettingsOpen(true)} sx={{ flexShrink: 0, color: 'text.secondary' }}>
               <SettingsIcon sx={{ fontSize: '1.1rem' }} />
             </IconButton>
           </Tooltip>
@@ -95,18 +96,21 @@ export function Calculator({ showHeader = true }: CalculatorProps) {
           symbol={topSymbol}
           value={calcValues.stableAmount}
           onChange={handleStableChange}
+          onCopy={onCopy}
         />
         <CurrencyInput
           label={pair.fiat}
           symbol={fiatSymbol}
           value={calcValues.fiatAmount}
           onChange={handleFiatChange}
+          onCopy={onCopy}
         />
         <CurrencyInput
           label={bridgeCrypto}
           symbol={bridgeSymbol}
           value={calcValues.cryptoAmount}
           onChange={handleCryptoChange}
+          onCopy={onCopy}
         />
       </Box>
 

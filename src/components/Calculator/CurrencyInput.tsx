@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useCallback } from 'react'
 import { TextField, InputAdornment, IconButton, Tooltip } from '@mui/material'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import { copyToClipboard } from '../../utils/clipboard'
@@ -8,13 +8,11 @@ interface CurrencyInputProps {
   symbol: string
   value: string
   onChange: (value: string) => void
+  onCopy?: (label: string, value: string) => void
   disabled?: boolean
 }
 
-export function CurrencyInput({ label, symbol, value, onChange, disabled }: CurrencyInputProps) {
-  const [copied, setCopied] = useState(false)
-  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
-
+export function CurrencyInput({ label, symbol, value, onChange, onCopy, disabled }: CurrencyInputProps) {
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value
     const cleaned = raw.replace(/[^0-9.]/g, '')
@@ -25,11 +23,9 @@ export function CurrencyInput({ label, symbol, value, onChange, disabled }: Curr
     const plainValue = value.replace(/,/g, '')
     const ok = await copyToClipboard(plainValue)
     if (ok) {
-      setCopied(true)
-      clearTimeout(copyTimeoutRef.current)
-      copyTimeoutRef.current = setTimeout(() => setCopied(false), 1500)
+      onCopy?.(label, plainValue)
     }
-  }, [value])
+  }, [value, label, onCopy])
 
   return (
     <TextField
@@ -54,10 +50,7 @@ export function CurrencyInput({ label, symbol, value, onChange, disabled }: Curr
                   onClick={handleCopy}
                   edge="end"
                   tabIndex={-1}
-                  sx={{
-                    color: copied ? 'primary.main' : 'inherit',
-                    transition: 'color 0.15s',
-                  }}
+                  sx={{ color: 'primary.main' }}
                 >
                   <ContentCopyIcon sx={{ fontSize: '0.8rem' }} />
                 </IconButton>

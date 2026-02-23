@@ -8,9 +8,10 @@ export interface ExchangeCalcProps {
   height?: string | number
   theme?: Theme
   showHeader?: boolean
+  onCopy?: (label: string, value: string) => void
 }
 
-export function ExchangeCalc({ height = '100vh', theme, showHeader = true }: ExchangeCalcProps) {
+export function ExchangeCalc({ height = '100vh', theme, showHeader = true, onCopy }: ExchangeCalcProps) {
   const resolvedTheme = theme ?? defaultTheme
   const isDark = resolvedTheme.palette.mode === 'dark'
 
@@ -19,7 +20,7 @@ export function ExchangeCalc({ height = '100vh', theme, showHeader = true }: Exc
       <ThemeProvider theme={resolvedTheme}>
         <CssBaseline />
         <Box data-cerc-theme={isDark ? 'dark' : 'light'} sx={{ width: '100%', height }}>
-          <Calculator showHeader={showHeader} />
+          <Calculator showHeader={showHeader} onCopy={onCopy} />
         </Box>
       </ThemeProvider>
     </Provider>
