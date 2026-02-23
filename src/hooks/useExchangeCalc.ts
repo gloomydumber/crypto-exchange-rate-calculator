@@ -136,38 +136,49 @@ export function useExchangeCalc() {
         if (controller.signal.aborted) return
 
         const { priceA, priceB } = bridgePrices
-        const rate = routeResult.rate
-
-        setEffectiveRate(rate)
-        setFiatPrice(priceA)
-        setStablePrice(priceB)
-        setActiveRouteId(routeResult.activeRouteId)
-        setActiveRouteLabel(findLabel(routes, routeResult.activeRouteId))
-        setRouteStates(routeResult.routeStates)
-
         const num = Number(value)
 
-        if (field === 'stable') {
-          // Top field (stable token or fiatB)
-          setCalcValues({
-            stableAmount: value,
-            fiatAmount: formatNumber(num * rate),
-            cryptoAmount: formatNumber(num / priceB),
-          })
-        } else if (field === 'fiat') {
-          // Middle field (fiatA)
-          setCalcValues({
-            stableAmount: formatNumber(num / rate),
-            fiatAmount: value,
-            cryptoAmount: formatNumber(num / priceA),
-          })
-        } else {
-          // Bottom field (bridge crypto)
+        setFiatPrice(priceA)
+        setStablePrice(priceB)
+
+        if (field === 'crypto') {
+          // BTC field: uses bridge prices directly, route chain rate is irrelevant
+          const derivedRate = priceA / priceB
+          const adapterA = getAdapterById(exchangeAId)
+          const adapterB = getAdapterById(exchangeBId)
+          const bridgeLabel = `${adapterA?.name ?? exchangeAId} + ${adapterB?.name ?? exchangeBId} — ${bridgeCrypto}/${currencyA} × ${bridgeCrypto}/${currencyB}`
+
+          setEffectiveRate(derivedRate)
+          setActiveRouteId(`${exchangeAId}-${exchangeBId}-bridge`)
+          setActiveRouteLabel(bridgeLabel)
+          setRouteStates(routeResult.routeStates)
           setCalcValues({
             stableAmount: formatNumber(num * priceB),
             fiatAmount: formatNumber(num * priceA),
             cryptoAmount: value,
           })
+        } else {
+          // Stable/fiat fields: use route chain rate for stable↔fiat conversion
+          const rate = routeResult.rate
+
+          setEffectiveRate(rate)
+          setActiveRouteId(routeResult.activeRouteId)
+          setActiveRouteLabel(findLabel(routes, routeResult.activeRouteId))
+          setRouteStates(routeResult.routeStates)
+
+          if (field === 'stable') {
+            setCalcValues({
+              stableAmount: value,
+              fiatAmount: formatNumber(num * rate),
+              cryptoAmount: formatNumber(num / priceB),
+            })
+          } else {
+            setCalcValues({
+              stableAmount: formatNumber(num / rate),
+              fiatAmount: value,
+              cryptoAmount: formatNumber(num / priceA),
+            })
+          }
         }
 
         setIsCalculating(false)
