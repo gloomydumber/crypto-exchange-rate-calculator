@@ -67,7 +67,7 @@ export function Calculator({ showHeader = true }: CalculatorProps) {
       )}
 
       {/* Route Status + inline settings gear when header is hidden */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: showHeader ? 0 : 1 }}>
         <Box sx={{ flex: 1 }}>
           <RouteStatusBar
             rate={effectiveRate}
