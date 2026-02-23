@@ -6,7 +6,7 @@
 
 ## Current Status
 
-**v0.0.3** — Published and integrated into wts-frontend. CI auto-publishes on version bump.
+**v0.0.4** — Published and integrated into wts-frontend. CI auto-publishes on version bump.
 
 ### What Works
 - Three synchronized input fields (stable/fiatB, fiat, bridge crypto) with live calculation
@@ -113,8 +113,11 @@ Determined by `isFiatToFiat(pair)` — returns `true` when `pair.stable !== 'USD
 2. 400ms debounce via `useDebounce`
 3. AbortController cancels in-flight requests
 4. Parallel fetch: `executeRouteChain()` + `fetchBridgePricesTwoSides()`
-5. Calculate other two fields from the result
-6. Update all atoms
+5. **Field-dependent route display**:
+   - **Crypto (BTC) field**: route chain rate is ignored. Rate derived from bridge prices (`priceA / priceB`). Route label shows bridge sources (e.g., `Upbit + Binance — BTC/KRW × BTC/USDT`).
+   - **Stable/Fiat fields**: route chain rate used for stable↔fiat conversion. Route label shows the winning route (e.g., `Upbit Direct — USDT/KRW`).
+6. Calculate other two fields from the result
+7. Update all atoms
 
 ### UI Details
 
@@ -170,6 +173,7 @@ export default function ExchangeCalcWidget() {
 
 | Version | Changes |
 |---------|---------|
+| 0.0.4 | BTC field now shows bridge price sources as route label instead of misleading direct route; rate derived from bridge prices for consistency |
 | 0.0.3 | Copy icon always lime, settings gear `text.secondary`, added `onCopy` callback prop |
 | 0.0.2 | Top margin on info block in widget mode |
 | 0.1.0 | Initial release — full calculator with 7 adapters, route system, settings |
