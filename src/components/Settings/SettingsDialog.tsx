@@ -21,9 +21,10 @@ import type { CurrencyPair, BridgeCrypto, StableToken } from '../../types/config
 interface SettingsDialogProps {
   open: boolean
   onClose: () => void
+  title?: string
 }
 
-export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
+export function SettingsDialog({ open, onClose, title }: SettingsDialogProps) {
   const [pair, setPair] = useAtom(pairAtom)
   const [exchangeAId, setExchangeAId] = useAtom(exchangeAIdAtom)
   const [exchangeBId, setExchangeBId] = useAtom(exchangeBIdAtom)
@@ -96,7 +97,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
       }}
     >
       <DialogTitle sx={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.9rem', fontWeight: 700, pb: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        Settings
+        {title ?? 'Settings'}
         <IconButton size="small" onClick={onClose}>
           <CloseIcon sx={{ fontSize: '1rem' }} />
         </IconButton>

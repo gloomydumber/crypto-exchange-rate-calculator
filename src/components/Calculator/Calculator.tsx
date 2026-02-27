@@ -11,9 +11,12 @@ import type { FiatCurrency } from '../../types/config'
 interface CalculatorProps {
   showHeader?: boolean
   onCopy?: (label: string, value: string) => void
+  settingsOpen?: boolean
+  onSettingsClose?: () => void
+  settingsTitle?: string
 }
 
-export function Calculator({ showHeader = true, onCopy }: CalculatorProps) {
+export function Calculator({ showHeader = true, onCopy, settingsOpen: settingsOpenProp, onSettingsClose, settingsTitle }: CalculatorProps) {
   const {
     calcValues,
     effectiveRate,
@@ -28,7 +31,13 @@ export function Calculator({ showHeader = true, onCopy }: CalculatorProps) {
     isFiatFiat,
   } = useExchangeCalc()
 
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [settingsOpenLocal, setSettingsOpenLocal] = useState(false)
+  const isControlled = settingsOpenProp !== undefined
+  const settingsOpen = isControlled ? settingsOpenProp : settingsOpenLocal
+  const handleSettingsClose = () => {
+    if (onSettingsClose) onSettingsClose()
+    if (!isControlled) setSettingsOpenLocal(false)
+  }
 
   const handleStableChange = useCallback((v: string) => updateField('stable', v), [updateField])
   const handleFiatChange = useCallback((v: string) => updateField('fiat', v), [updateField])
@@ -59,11 +68,13 @@ export function Calculator({ showHeader = true, onCopy }: CalculatorProps) {
           >
             Exchange Calculator
           </Typography>
-          <Tooltip title="Settings" arrow>
-            <IconButton size="small" onClick={() => setSettingsOpen(true)} sx={{ color: 'text.secondary' }}>
-              <SettingsIcon sx={{ fontSize: '1.1rem' }} />
-            </IconButton>
-          </Tooltip>
+          {!isControlled && (
+            <Tooltip title="Settings" arrow>
+              <IconButton size="small" onClick={() => setSettingsOpenLocal(true)} sx={{ color: 'text.secondary' }}>
+                <SettingsIcon sx={{ fontSize: '1.1rem' }} />
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
       )}
 
@@ -80,9 +91,9 @@ export function Calculator({ showHeader = true, onCopy }: CalculatorProps) {
             error={lastError}
           />
         </Box>
-        {!showHeader && (
+        {!showHeader && !isControlled && (
           <Tooltip title="Settings" arrow>
-            <IconButton size="small" onClick={() => setSettingsOpen(true)} sx={{ flexShrink: 0, color: 'text.secondary' }}>
+            <IconButton size="small" onClick={() => setSettingsOpenLocal(true)} sx={{ flexShrink: 0, color: 'text.secondary' }}>
               <SettingsIcon sx={{ fontSize: '1.1rem' }} />
             </IconButton>
           </Tooltip>
@@ -115,7 +126,7 @@ export function Calculator({ showHeader = true, onCopy }: CalculatorProps) {
       </Box>
 
       {/* Settings Dialog */}
-      <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <SettingsDialog open={settingsOpen} onClose={handleSettingsClose} title={settingsTitle} />
     </Box>
   )
 }
